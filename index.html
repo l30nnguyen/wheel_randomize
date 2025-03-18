@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Wheel of Names</title>
+  <title>Team Randomize</title>
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <!-- CSS Stylesheet -->
@@ -13,27 +13,38 @@
 
 <div class="container">
   <footer>
-    <p>Randomize</a></p>
-  </footer>
-  <div class="row">
-    <div class=" col-md-4">
-      <canvas id="wheelCanvas" width="800" height="800"></canvas>
-      <div id="fireworks-container"></div>
-    </div>
-    <div class=" col-md-4">
-      <table id="dynamicTable" border="2"></table>
-    </div>
-    <div class="input-section col-md-3">
-        <div class="input">
-          <textarea id="columnsInput" placeholder="Number of table randomized"></textarea>
-          <small Number of table randomize names into</small>
+    <p>Number of teams</a>
+      <div class="row">
+        <div class="col-md-1">
+          <textarea id="columnsInput" value=3 
+            style="width: 64px; height: 64px; resize: none; overflow: hidden; 
+            text-align: center; align-items: center; justify-content: center;">
+          </textarea>
         </div>
-      <textarea id="namesInput" placeholder="Enter names each line"></textarea>
-      <small class="input-hint">Tip: Separate names each line</small>
-      <div id="controls">
-        <button id="updateWheelBtn">Save</button>
-        <button id="spinBtn">Spin</button>
-        <button id="resetBtn">Reset</button>
+      </div>
+    </p>
+  </footer>
+  
+  <div class="row">
+    <div id="controls">
+      <button id="updateWheelBtn">Save</button>
+      <button id="spinBtn">Spin</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+  </div>
+  <br>
+  <table id="dynamicTable" border="2"></table>
+  <div class="row">
+    <div class="col-md-6">
+      <canvas id="wheelCanvas"></canvas>
+    </div>
+  </div>
+  <div class="row">
+    <div class="input-section">
+      <div class="textarea-container">
+        <textarea id="namesInput1" placeholder="Enter names each line"></textarea>  
+        <textarea id="namesInput2" placeholder="Enter names each line"></textarea>
+        <textarea id="namesInput3" placeholder="Enter names each line"></textarea>
       </div>
     </div>
   </div>

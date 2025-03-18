@@ -6,6 +6,7 @@ var ctx = canvas.getContext('2d');
 
 
 // Variables for the wheel
+const maxInputTable = 3;
 var names = [];
 var startAngle = 0;
 var arc = 0;
@@ -26,14 +27,15 @@ let triggerMode = false;
 let triggerNumber = '';
 let isInputFocused = false;
 
-// Add event listeners for input focus and blur
-document.getElementById('namesInput').addEventListener('focus', () => {
-  isInputFocused = true;
-});
-
-document.getElementById('namesInput').addEventListener('blur', () => {
-  isInputFocused = false;
-});
+for(var i = 1; i <= maxInputTable; i++){
+  document.getElementById(`namesInput${i}`).addEventListener('focus', () => {
+    isInputFocused = true;
+  });
+  
+  document.getElementById(`namesInput${i}`).addEventListener('blur', () => {
+    isInputFocused = false;
+  });
+}
 
 // Modify the keydown event listener
 document.addEventListener('keydown', (event) => {
@@ -67,7 +69,10 @@ function resetResult() {
   let table = document.getElementById("dynamicTable");
   table.innerHTML = "";
   document.getElementById("columnsInput").value = 1;
-  document.getElementById('namesInput').value = "";
+  for(var i = 1; i <= maxInputTable; i++){
+    document.getElementById(`namesInput${i}`).value = "";
+  }
+  names = [];
   document.getElementById('dynamicTable').classList.remove('show');
   drawWheel();
     setTimeout(() => {
@@ -75,21 +80,27 @@ function resetResult() {
     }, 10);
 }
 
-// Function to update the wheel with names
-function updateWheel() {
-  var columns = document.getElementById("columnsInput").value;
-  var input = document.getElementById('namesInput').value;
-  names = input.split('\n'); // Split by line breaks
-  names = names.map(function(name) {
-    return name.trim();
-  });
-  names = names.filter(function(name) {
-    return name !== '';
-  });
+function refreshUserInput(){
+  names = [];
+  for(var i = 1; i <= maxInputTable; i++){
+    var input = document.getElementById(`namesInput${i}`).value;
+    names[i-1] = input.split('\n'); // Split by line breaks
+    names[i-1] = names[i-1].map(function(name) {
+      return name.trim();
+    });
+    names[i-1] = names[i-1].filter(function(name) {
+      return name !== '';
+    });
+  }
   startAngle = 0; // Reset the start angle
   setCanvasSize(); // Update canvas size
   drawWheel();
-  // Save names to localStorage
+}
+
+// Function to update the wheel with names
+function updateWheel() {
+  refreshUserInput();
+  columns = document.getElementById("columnsInput").value;
   localStorage.setItem('tableCol', columns);
   localStorage.setItem('wheelNames', JSON.stringify(names));
   console.log('Wheel updated with names:', names);
@@ -99,15 +110,14 @@ function updateWheel() {
 function generateHeaders(n) {
   let headers = [];
   for (let i = 0; i < n; i++) {
-    headers.push(String.fromCharCode(65 + i));
+    headers.push("TEAM " + String.fromCharCode(65 + i));
   }
   return headers;
 }
 
-function drawTable(item_list) {
+function drawTable(cell_list) {
   let columns = Math.max(1, document.getElementById("columnsInput").value);
   let headers = generateHeaders(columns)
-  let rows = item_list.length/columns;
   let table = document.getElementById("dynamicTable");
   table.innerHTML = "";
 
@@ -120,8 +130,13 @@ function drawTable(item_list) {
   });
   thead.appendChild(headerRow);
   table.appendChild(thead);
+  
+  var item_list = [];
+  for(var idx = 0; idx < cell_list.length; idx++) {
+    item_list = item_list.concat(cell_list[idx]) 
+  }
 
-  for (let i = 0; i < rows; i++) {
+  for (let i = 0; i < item_list.length/columns; i++) {
     let tr = document.createElement("tr");
     for (let j = 0; j < columns; j++) {
       let td = document.createElement("td");
@@ -162,10 +177,14 @@ function drawWheel() {
   var outsideRadius = canvas.width / 2 - 20;
   var textRadius = outsideRadius - 30;
   var insideRadius = 0;
+  var item_list = [];
+  for(var idx = 0; idx < names.length; idx++) {
+    item_list = item_list.concat(names[idx]) 
+  }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (names.length === 0) {
+  if (item_list.length === 0) {
     // If no names are available, display a message
     ctx.font = 'bold 24px Arial';
     ctx.fillStyle = 'black';
@@ -173,7 +192,8 @@ function drawWheel() {
     return;
   }
 
-  var numSegments = names.length;
+  var numSegments = item_list.length;
+
   arc = 2 * Math.PI / numSegments;
 
   for (var i = 0; i < numSegments; i++) {
@@ -199,7 +219,7 @@ function drawWheel() {
         canvas.height / 2 + Math.sin(angle + arc / 2) * textRadius
     );
     ctx.rotate(angle + arc / 2 + Math.PI / 2);
-    var text = names[i];
+    var text = item_list[i];
     ctx.font = 'bold ' + Math.max(12, outsideRadius / 15) + 'px Arial';
     ctx.fillText(text, -ctx.measureText(text).width / 2, 0);
     ctx.restore();
@@ -265,38 +285,38 @@ function hslToRgb(h, s, l) {
 
 // Function to start spinning the wheel
 function spin() {
-    if (names.length === 0) {
-      alert("No names available to spin!");
-      return;
-    }
-  
-    spinTime = 0;
-    spinTimeTotal = 5000; // Total spin time in milliseconds
-    initialStartAngle = startAngle;
-  
-    var rotations = Math.floor(Math.random() * 3) + 3; // 3 to 5 rotations
-  
-    if (triggerMode && triggerNumber !== '') {
-      const index = parseInt(triggerNumber) - 1;
-      if (index >= 0 && index < names.length) {
-        console.log('Triggering spin to:', names[index]);
-        var desiredAngle = (names.length - index) * arc - (arc / 2);
-        desiredAngle = desiredAngle % (2 * Math.PI);
-  
-        var currentAngle = (startAngle + Math.PI / 2) % (2 * Math.PI); // Adjust for arrow at 90 degrees
-  
-        var angleDifference = (desiredAngle - currentAngle + 2 * Math.PI) % (2 * Math.PI);
-  
-        totalRotation = rotations * 2 * Math.PI + angleDifference;
-      } else {
-        console.log('Invalid trigger number, spinning randomly');
-        totalRotation = rotations * 2 * Math.PI + Math.random() * 2 * Math.PI;
-      }
-      triggerMode = false;
-      triggerNumber = '';
+  refreshUserInput();
+  if (names.length === 0) {
+    alert("No names available to spin!");
+    return;
+  }
+  spinTime = 0;
+  spinTimeTotal = 5000; // Total spin time in milliseconds
+  initialStartAngle = startAngle;
+
+  var rotations = Math.floor(Math.random() * 3) + 3; // 3 to 5 rotations
+
+  if (triggerMode && triggerNumber !== '') {
+    const index = parseInt(triggerNumber) - 1;
+    if (index >= 0 && index < names.length) {
+      console.log('Triggering spin to:', names[index]);
+      var desiredAngle = (names.length - index) * arc - (arc / 2);
+      desiredAngle = desiredAngle % (2 * Math.PI);
+
+      var currentAngle = (startAngle + Math.PI / 2) % (2 * Math.PI); // Adjust for arrow at 90 degrees
+
+      var angleDifference = (desiredAngle - currentAngle + 2 * Math.PI) % (2 * Math.PI);
+
+      totalRotation = rotations * 2 * Math.PI + angleDifference;
     } else {
+      console.log('Invalid trigger number, spinning randomly');
       totalRotation = rotations * 2 * Math.PI + Math.random() * 2 * Math.PI;
     }
+    triggerMode = false;
+    triggerNumber = '';
+  } else {
+    totalRotation = rotations * 2 * Math.PI + Math.random() * 2 * Math.PI;
+  }
 
   // Disable spin button
   document.getElementById('spinBtn').disabled = true;
@@ -323,7 +343,10 @@ function rotateWheel() {
 
   startAngle = initialStartAngle + easedT * totalRotation;
   drawWheel();
-  drawTable(shuffleNames(names));
+  for(i = 0; i < names.length; i++){
+    names[i] = shuffleNames(names[i])
+  }
+  drawTable(names);
   spinTimeout = setTimeout(rotateWheel, 30);
 }
 
@@ -371,7 +394,10 @@ window.addEventListener('load', function() {
   var storedNames = localStorage.getItem('wheelNames');
   if (storedNames) {
     names = JSON.parse(storedNames);
-    document.getElementById('namesInput').value = names.join('\n');
+    console.log(names)
+    for(var i = 1; i <= maxInputTable; i++){
+      document.getElementById(`namesInput${i}`).value = names[i-1].join('\n');
+    }
     document.getElementById("columnsInput").value = columns;
     startAngle = 0;
     drawWheel();
